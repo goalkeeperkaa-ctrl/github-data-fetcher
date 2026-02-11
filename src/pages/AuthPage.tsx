@@ -12,20 +12,17 @@ import { toast } from 'sonner';
 import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 
 const AuthPage = () => {
-  const { signIn, signUp, verifyOtp, resendOtp } = useAuth();
+  const { signIn, signUp, sendOtp, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // Register state
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regName, setRegName] = useState('');
 
-  // OTP verification state
   const [pendingVerification, setPendingVerification] = useState(false);
   const [otpCode, setOtpCode] = useState('');
 
@@ -49,14 +46,25 @@ const AuthPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(regEmail, regPassword, regName);
-    setLoading(false);
-    if (error) {
-      toast.error('Ошибка регистрации: ' + error.message);
-    } else {
-      setPendingVerification(true);
-      toast.success('Код подтверждения отправлен на ' + regEmail);
+
+    // 1. Register user (auto-confirmed)
+    const { error: signUpError } = await signUp(regEmail, regPassword, regName);
+    if (signUpError) {
+      setLoading(false);
+      toast.error('Ошибка регистрации: ' + signUpError.message);
+      return;
     }
+
+    // 2. Send OTP code via Resend
+    const { error: otpError } = await sendOtp(regEmail);
+    setLoading(false);
+    if (otpError) {
+      toast.error('Ошибка отправки кода: ' + otpError.message);
+      return;
+    }
+
+    setPendingVerification(true);
+    toast.success('Код подтверждения отправлен на ' + regEmail);
   };
 
   const handleVerifyOtp = async () => {
@@ -77,7 +85,7 @@ const AuthPage = () => {
 
   const handleResendOtp = async () => {
     setLoading(true);
-    const { error } = await resendOtp(regEmail);
+    const { error } = await sendOtp(regEmail);
     setLoading(false);
     if (error) {
       toast.error('Ошибка отправки: ' + error.message);
@@ -166,30 +174,14 @@ const AuthPage = () => {
                     <Label htmlFor="login-email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="login-email" type="email" placeholder="your@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Пароль</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="login-password" type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -204,45 +196,21 @@ const AuthPage = () => {
                     <Label htmlFor="reg-name">Имя</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="reg-name"
-                        type="text"
-                        placeholder="Ваше имя"
-                        value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                        className="pl-10"
-                      />
+                      <Input id="reg-name" type="text" placeholder="Ваше имя" value={regName} onChange={(e) => setRegName(e.target.value)} className="pl-10" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="reg-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={regEmail}
-                        onChange={(e) => setRegEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                      <Input id="reg-email" type="email" placeholder="your@email.com" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-password">Пароль</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="reg-password"
-                        type="password"
-                        placeholder="Минимум 6 символов"
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                        minLength={6}
-                      />
+                      <Input id="reg-password" type="password" placeholder="Минимум 6 символов" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="pl-10" required minLength={6} />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>

@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from 'sonner';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 
 const AuthPage = () => {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, verifyOtp, resendOtp } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +24,10 @@ const AuthPage = () => {
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regName, setRegName] = useState('');
+
+  // OTP verification state
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +54,92 @@ const AuthPage = () => {
     if (error) {
       toast.error('Ошибка регистрации: ' + error.message);
     } else {
-      toast.success('Проверьте вашу почту для подтверждения регистрации!');
+      setPendingVerification(true);
+      toast.success('Код подтверждения отправлен на ' + regEmail);
     }
   };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast.error('Введите 6-значный код');
+      return;
+    }
+    setLoading(true);
+    const { error } = await verifyOtp(regEmail, otpCode);
+    setLoading(false);
+    if (error) {
+      toast.error('Неверный код: ' + error.message);
+    } else {
+      toast.success('Аккаунт подтверждён!');
+      navigate('/');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    const { error } = await resendOtp(regEmail);
+    setLoading(false);
+    if (error) {
+      toast.error('Ошибка отправки: ' + error.message);
+    } else {
+      toast.success('Код повторно отправлен на ' + regEmail);
+    }
+  };
+
+  if (pendingVerification) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container flex items-center justify-center py-12">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-bold">
+                A
+              </div>
+              <CardTitle className="text-2xl">Подтверждение</CardTitle>
+              <CardDescription>
+                Введите 6-значный код, отправленный на <span className="font-medium text-foreground">{regEmail}</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6">
+              <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+
+              <Button className="w-full" onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6}>
+                {loading ? 'Проверяем...' : 'Подтвердить'}
+              </Button>
+
+              <div className="flex flex-col items-center gap-2 text-sm">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  className="text-primary hover:underline disabled:opacity-50"
+                >
+                  Отправить код повторно
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPendingVerification(false); setOtpCode(''); }}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-3 w-3" /> Назад к регистрации
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

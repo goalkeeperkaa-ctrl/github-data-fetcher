@@ -206,14 +206,13 @@ const ModerationPage = () => {
                           </Button>
                           {activeTab === 'pending' && (
                             <>
-                              <Button
-                                size="sm"
-                                onClick={() => updateStatus(event.id, 'approved')}
-                                disabled={actionLoading === event.id}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              >
-                                <Check className="h-4 w-4 mr-1" /> Одобрить
-                              </Button>
+                               <Button
+                                 size="sm"
+                                 onClick={() => updateStatus(event.id, 'approved')}
+                                 disabled={actionLoading === event.id}
+                               >
+                                 <Check className="h-4 w-4 mr-1" /> Одобрить
+                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
@@ -292,14 +291,13 @@ const ModerationPage = () => {
                   </p>
                 </div>
                 {previewEvent.status === 'pending' && (
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                      onClick={() => updateStatus(previewEvent.id, 'approved')}
-                      disabled={actionLoading === previewEvent.id}
-                    >
-                      <Check className="h-4 w-4 mr-1" /> Одобрить
-                    </Button>
+                   <div className="flex gap-2 pt-2">
+                     <Button
+                       onClick={() => updateStatus(previewEvent.id, 'approved')}
+                       disabled={actionLoading === previewEvent.id}
+                     >
+                       <Check className="h-4 w-4 mr-1" /> Одобрить
+                     </Button>
                     <Button
                       variant="destructive"
                       className="flex-1"

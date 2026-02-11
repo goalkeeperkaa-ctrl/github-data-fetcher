@@ -1,26 +1,48 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import SearchAndFilters from '@/components/SearchAndFilters';
 import EventCard from '@/components/EventCard';
-import { mockEvents, type EventCategory } from '@/lib/mock-data';
+import { CATEGORIES, type DbEventCategory } from '@/lib/mock-data';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<EventCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<DbEventCategory | 'all'>('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [events, setEvents] = useState<Tables<'events'>[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredEvents = useMemo(() => {
-    return mockEvents.filter((event) => {
-      const matchesSearch =
-        !searchQuery ||
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-      const matchesCity = selectedCity === 'all' || event.city === selectedCity;
-      return matchesSearch && matchesCategory && matchesCity;
-    });
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      let query = supabase
+        .from('events')
+        .select('*')
+        .eq('status', 'approved')
+        .order('date_start', { ascending: true });
+
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory);
+      }
+      if (selectedCity !== 'all') {
+        query = query.eq('city', selectedCity);
+      }
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        setEvents(data);
+      }
+      setLoading(false);
+    };
+
+    fetchEvents();
   }, [searchQuery, selectedCategory, selectedCity]);
 
   return (
@@ -43,12 +65,22 @@ const Index = () => {
           <>
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Найдено: <span className="font-medium text-foreground">{filteredEvents.length}</span> мероприятий
+                Найдено: <span className="font-medium text-foreground">{events.length}</span> мероприятий
               </p>
             </div>
-            {filteredEvents.length > 0 ? (
+            {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredEvents.map((event) => (
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-[16/10] rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : events.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {events.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </div>

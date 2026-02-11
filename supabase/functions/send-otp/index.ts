@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Aidagis <onboarding@resend.dev>",
-        to: [email],
+        to: ["goalkeeperkaa@gmail.com"], // Временно для тестирования
         subject: "Ваш код подтверждения — Aidagis",
         html: `
           <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 32px; text-align: center;">

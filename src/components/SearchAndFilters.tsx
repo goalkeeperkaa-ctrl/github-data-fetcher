@@ -2,7 +2,7 @@ import { Search, SlidersHorizontal, List, Map, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CATEGORIES, CITIES, type EventCategory } from '@/lib/mock-data';
+import { CATEGORIES, CITIES, type DbEventCategory } from '@/lib/mock-data';
 import {
   Select,
   SelectContent,
@@ -14,8 +14,8 @@ import {
 interface SearchAndFiltersProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  selectedCategory: EventCategory | 'all';
-  onCategoryChange: (c: EventCategory | 'all') => void;
+  selectedCategory: DbEventCategory | 'all';
+  onCategoryChange: (c: DbEventCategory | 'all') => void;
   selectedCity: string;
   onCityChange: (c: string) => void;
   viewMode: 'list' | 'map';

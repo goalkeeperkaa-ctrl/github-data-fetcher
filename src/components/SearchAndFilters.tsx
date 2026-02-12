@@ -1,8 +1,12 @@
-import { Search, SlidersHorizontal, List, X } from 'lucide-react';
+import { useState } from 'react';
+import { Search, SlidersHorizontal, List, X, CalendarIcon, ChevronDown } from 'lucide-react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import BrandPin from '@/components/BrandPin';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
 import { CATEGORIES, CITIES, type DbEventCategory } from '@/lib/mock-data';
 import {
   Select,
@@ -11,6 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface SearchAndFiltersProps {
   searchQuery: string;
@@ -21,6 +31,8 @@ interface SearchAndFiltersProps {
   onCityChange: (c: string) => void;
   viewMode: 'list' | 'map';
   onViewModeChange: (m: 'list' | 'map') => void;
+  selectedDate: Date | undefined;
+  onDateChange: (d: Date | undefined) => void;
 }
 
 const SearchAndFilters = ({
@@ -32,11 +44,19 @@ const SearchAndFilters = ({
   onCityChange,
   viewMode,
   onViewModeChange,
+  selectedDate,
+  onDateChange,
 }: SearchAndFiltersProps) => {
-  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all';
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate;
+
+  const activeCategoryLabel =
+    selectedCategory === 'all'
+      ? 'Категория'
+      : CATEGORIES.find((c) => c.value === selectedCategory)?.label ?? 'Категория';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Search row */}
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -71,31 +91,56 @@ const SearchAndFilters = ({
       {/* Filters row */}
       <div className="flex flex-wrap items-center gap-2">
         <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-        
-        {/* Category chips */}
-        <div className="flex flex-wrap gap-1.5">
-          <Badge
-            variant={selectedCategory === 'all' ? 'default' : 'outline'}
-            className="cursor-pointer transition-colors"
-            onClick={() => onCategoryChange('all')}
-          >
-            Все
-          </Badge>
-          {CATEGORIES.map((cat) => (
-            <Badge
-              key={cat.value}
-              variant={selectedCategory === cat.value ? 'default' : 'outline'}
-              className="cursor-pointer transition-colors"
-              onClick={() => onCategoryChange(cat.value)}
+
+        {/* Category popover */}
+        <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-8 text-sm gap-1.5',
+                selectedCategory !== 'all' && 'border-primary text-primary'
+              )}
             >
-              {cat.emoji} {cat.label}
-            </Badge>
-          ))}
-        </div>
+              {activeCategoryLabel}
+              <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-2" align="start">
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => { onCategoryChange('all'); setCategoryOpen(false); }}
+                className={cn(
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent',
+                  selectedCategory === 'all' && 'bg-accent font-medium'
+                )}
+              >
+                Все категории
+              </button>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.value}
+                  onClick={() => { onCategoryChange(cat.value); setCategoryOpen(false); }}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent',
+                    selectedCategory === cat.value && 'bg-accent font-medium'
+                  )}
+                >
+                  <span>{cat.emoji}</span>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* City select */}
         <Select value={selectedCity} onValueChange={onCityChange}>
-          <SelectTrigger className="w-[160px] h-8 text-sm">
+          <SelectTrigger className={cn(
+            'w-[160px] h-8 text-sm',
+            selectedCity !== 'all' && 'border-primary text-primary'
+          )}>
             <SelectValue placeholder="Город" />
           </SelectTrigger>
           <SelectContent>
@@ -108,6 +153,31 @@ const SearchAndFilters = ({
           </SelectContent>
         </Select>
 
+        {/* Date picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-8 text-sm gap-1.5',
+                selectedDate && 'border-primary text-primary'
+              )}
+            >
+              <CalendarIcon className="h-3.5 w-3.5" />
+              {selectedDate ? format(selectedDate, 'd MMM', { locale: ru }) : 'Дата'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={onDateChange}
+              className={cn('p-3 pointer-events-auto')}
+            />
+          </PopoverContent>
+        </Popover>
+
         {hasFilters && (
           <Button
             variant="ghost"
@@ -116,6 +186,7 @@ const SearchAndFilters = ({
             onClick={() => {
               onCategoryChange('all');
               onCityChange('all');
+              onDateChange(undefined);
             }}
           >
             <X className="h-3 w-3" />

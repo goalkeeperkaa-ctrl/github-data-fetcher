@@ -58,6 +58,7 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         "brand-gold": "hsl(var(--brand-gold))",
+        "brand-cream": "hsl(var(--brand-cream))",
         "brand-charcoal": "hsl(var(--brand-charcoal))",
       },
       borderRadius: {

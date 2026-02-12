@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Mail, Lock, User } from 'lucide-react';
+import AidagisLogo from '@/components/AidagisLogo';
+import BrandPatternGold from '@/components/BrandPatternGold';
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
@@ -55,11 +57,16 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container flex items-center justify-center py-12">
-        <Card className="w-full max-w-md">
+      <main className="relative container flex items-center justify-center py-12">
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none overflow-hidden">
+          <BrandPatternGold className="w-full h-full" />
+        </div>
+
+        <Card className="relative w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-bold">
-              A
+            <div className="mx-auto mb-3">
+              <AidagisLogo className="h-14 w-auto" />
             </div>
             <CardTitle className="text-2xl">Добро пожаловать</CardTitle>
             <CardDescription>Войдите или создайте аккаунт для доступа ко всем функциям</CardDescription>

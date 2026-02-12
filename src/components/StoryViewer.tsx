@@ -1,20 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import type { StoryGroup } from '@/hooks/useStories';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface StoryViewerProps {
   groups: StoryGroup[];
   initialGroupIndex: number;
   onClose: () => void;
+  onStoryDeleted?: () => void;
 }
 
 const STORY_DURATION = 5000;
 
-const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) => {
+const StoryViewer = ({ groups, initialGroupIndex, onClose, onStoryDeleted }: StoryViewerProps) => {
+  const { user } = useAuth();
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
   const group = groups[groupIndex];
   const story = group?.stories[storyIndex];
@@ -68,6 +74,34 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
 
   if (!story) return null;
 
+  const handleDelete = async () => {
+    if (!story) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from('stories')
+      .delete()
+      .eq('id', story.id)
+      .eq('user_id', user?.id);
+
+    if (error) {
+      toast.error('Не удалось удалить историю');
+      setDeleting(false);
+    } else {
+      toast.success('История удалена');
+      onStoryDeleted?.();
+      // Move to next story or close
+      if (storyIndex < group.stories.length - 1) {
+        setStoryIndex((i) => i + 1);
+      } else if (groupIndex < groups.length - 1) {
+        setGroupIndex((i) => i + 1);
+        setStoryIndex(0);
+      } else {
+        onClose();
+      }
+      setDeleting(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -83,6 +117,18 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
         >
           <X className="h-7 w-7" />
         </button>
+
+        {/* Delete button (only for own stories) */}
+        {group.isOwn && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="absolute top-4 left-4 z-10 text-accent/90 hover:text-accent transition-colors disabled:opacity-50"
+            title="Удалить историю"
+          >
+            <Trash2 className="h-6 w-6" />
+          </button>
+        )}
 
         {/* Navigation arrows */}
         {(groupIndex > 0 || storyIndex > 0) && (

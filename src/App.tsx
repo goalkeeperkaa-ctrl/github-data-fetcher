@@ -9,6 +9,7 @@ import AuthPage from "./pages/AuthPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import ModerationPage from "./pages/ModerationPage";
+import MapPage from "./pages/MapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="/create" element={<CreateEventPage />} />
             <Route path="/moderation" element={<ModerationPage />} />
+            <Route path="/map" element={<MapPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

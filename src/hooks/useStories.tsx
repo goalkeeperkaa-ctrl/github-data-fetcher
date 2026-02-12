@@ -110,5 +110,17 @@ export const useStories = () => {
     return { error: null };
   };
 
-  return { storyGroups, loading, createStory, refetch: fetchStories };
+  const deleteStory = async (storyId: string) => {
+    const { error } = await supabase
+      .from('stories')
+      .delete()
+      .eq('id', storyId)
+      .eq('user_id', user?.id);
+
+    if (error) return { error: error.message };
+    await fetchStories();
+    return { error: null };
+  };
+
+  return { storyGroups, loading, createStory, deleteStory, refetch: fetchStories };
 };

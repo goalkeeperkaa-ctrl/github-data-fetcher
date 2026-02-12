@@ -140,6 +140,9 @@ const StoriesRow = () => {
           groups={storyGroups}
           initialGroupIndex={viewerIndex}
           onClose={() => setViewerOpen(false)}
+          onStoryDeleted={() => {
+            setViewerOpen(false);
+          }}
         />
       )}
     </>

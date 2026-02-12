@@ -26,11 +26,33 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { email } = await req.json();
-    if (!email) {
+    if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || email.length > 254) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Rate limit: max 3 OTP requests per email per hour
+    const { data: recentCodes } = await supabase
+      .from("otp_codes")
+      .select("created_at")
+      .eq("email", email)
+      .gte("created_at", new Date(Date.now() - 3600000).toISOString());
+
+    if (recentCodes && recentCodes.length >= 3) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const code = generateOTP();
@@ -61,7 +83,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Aidagis <onboarding@resend.dev>",
-        to: ["goalkeeperkaa@gmail.com"], // Временно для тестирования
+        to: [email],
         subject: "Ваш код подтверждения — Aidagis",
         html: `
           <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 32px; text-align: center;">

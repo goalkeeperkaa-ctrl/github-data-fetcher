@@ -11,6 +11,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFavorites } from '@/hooks/useFavorites';
 import BrandPin from '@/components/BrandPin';
+import StoriesRow from '@/components/StoriesRow';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.97 },
@@ -64,6 +65,7 @@ const Index = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="container py-6 space-y-6 flex-1">
+        <StoriesRow />
         <HeroSection />
         <SearchAndFilters
           searchQuery={searchQuery}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,10 +8,12 @@ import type { Tables } from '@/integrations/supabase/types';
 import Header from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, ExternalLink } from 'lucide-react';
+import { Calendar, ExternalLink, Locate, Search } from 'lucide-react';
 import BrandPin from '@/components/BrandPin';
 import { CATEGORIES } from '@/lib/mock-data';
+import { toast } from 'sonner';
 
 // Fix default marker icon issue with webpack/vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -61,12 +63,40 @@ const createCategoryIcon = (category: string) => {
   });
 };
 
+const userLocationIcon = L.divIcon({
+  className: 'user-location-marker',
+  html: `<div style="
+    width: 16px;
+    height: 16px;
+    background: hsl(213 94% 56%);
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px hsl(213 94% 56% / 0.3), 0 2px 6px rgba(0,0,0,0.3);
+  "></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+// Component to fly to user location
+const FlyToLocation = ({ position }: { position: [number, number] | null }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 13, { duration: 1.5 });
+    }
+  }, [position, map]);
+  return null;
+};
+
 const MapPage = () => {
   const [events, setEvents] = useState<Tables<'events'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
     new Set(CATEGORIES.map((c) => c.value))
   );
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -81,39 +111,58 @@ const MapPage = () => {
       if (data) setEvents(data);
       setLoading(false);
     };
-
     fetchEvents();
   }, []);
 
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) {
+      toast.error('Геолокация не поддерживается вашим браузером');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        setLocating(false);
+        toast.success('Местоположение определено');
+      },
+      () => {
+        setLocating(false);
+        toast.error('Не удалось определить местоположение');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const toggleCategory = (category: string) => {
     const newSelected = new Set(selectedCategories);
-    if (newSelected.has(category)) {
-      newSelected.delete(category);
-    } else {
-      newSelected.add(category);
-    }
+    if (newSelected.has(category)) newSelected.delete(category);
+    else newSelected.add(category);
     setSelectedCategories(newSelected);
   };
 
-  const filteredEvents = events.filter((event) =>
-    selectedCategories.has(event.category)
-  );
+  const filteredEvents = events
+    .filter((event) => selectedCategories.has(event.category))
+    .filter((event) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        event.title.toLowerCase().includes(q) ||
+        (event.city?.toLowerCase().includes(q)) ||
+        (event.address?.toLowerCase().includes(q))
+      );
+    });
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const formatTime = (d: string) =>
     new Date(d).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-  // Center on Moscow by default, or first event
   const center: [number, number] =
-    filteredEvents.length > 0
+    userLocation || (filteredEvents.length > 0
       ? [filteredEvents[0].latitude!, filteredEvents[0].longitude!]
-      : [55.75, 37.62];
+      : [55.75, 37.62]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -126,10 +175,21 @@ const MapPage = () => {
           </div>
         ) : (
           <>
-            {/* Category Filters */}
-            <div className="absolute top-2 left-2 z-[1000] bg-background/90 backdrop-blur-md rounded-lg shadow-md p-3 max-w-xs">
-              <p className="text-xs font-semibold text-foreground mb-2">Категории</p>
-              <div className="space-y-1.5">
+            {/* Left panel: categories + search */}
+            <div className="absolute top-2 left-2 z-[1000] bg-background/90 backdrop-blur-md rounded-lg shadow-md p-3 max-w-xs space-y-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск на карте..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+
+              <p className="text-xs font-semibold text-foreground">Категории</p>
+              <div className="space-y-1.5 max-h-52 overflow-y-auto">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.value}
@@ -159,6 +219,27 @@ const MapPage = () => {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <FlyToLocation position={userLocation} />
+
+                {/* User location marker */}
+                {userLocation && (
+                  <>
+                    <Marker position={userLocation} icon={userLocationIcon}>
+                      <Popup>Вы здесь</Popup>
+                    </Marker>
+                    <Circle
+                      center={userLocation}
+                      radius={500}
+                      pathOptions={{
+                        color: 'hsl(213, 94%, 56%)',
+                        fillColor: 'hsl(213, 94%, 56%)',
+                        fillOpacity: 0.08,
+                        weight: 1,
+                      }}
+                    />
+                  </>
+                )}
+
                 {filteredEvents.map((event) => {
                   const cat = CATEGORIES.find((c) => c.value === event.category);
                   return (
@@ -171,13 +252,9 @@ const MapPage = () => {
                         <div className="space-y-2 p-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm">{cat?.emoji}</span>
-                            <span className="text-xs font-medium text-muted-foreground">
-                              {cat?.label}
-                            </span>
+                            <span className="text-xs font-medium text-muted-foreground">{cat?.label}</span>
                           </div>
-                          <h3 className="font-semibold text-sm leading-tight">
-                            {event.title}
-                          </h3>
+                          <h3 className="font-semibold text-sm leading-tight">{event.title}</h3>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
                             {formatDate(event.date_start)}, {formatTime(event.date_start)}
@@ -209,11 +286,21 @@ const MapPage = () => {
                 })}
               </MapContainer>
 
-              {/* Event count badge */}
-              <div className="absolute top-2 right-2 z-[1000]">
+              {/* Right side controls */}
+              <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-2 items-end">
                 <Badge variant="secondary" className="backdrop-blur-md bg-background/80 shadow-md px-3 py-1.5 text-sm">
                   {filteredEvents.length} {filteredEvents.length === 1 ? 'мероприятие' : 'мероприятий'} на карте
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="backdrop-blur-md bg-background/80 shadow-md gap-1.5"
+                  onClick={handleGeolocate}
+                  disabled={locating}
+                >
+                  <Locate className={`h-4 w-4 ${locating ? 'animate-spin' : ''}`} />
+                  {locating ? 'Определяю...' : 'Мое местоположение'}
+                </Button>
               </div>
             </div>
           </>

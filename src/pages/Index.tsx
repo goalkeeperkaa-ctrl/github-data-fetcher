@@ -7,8 +7,10 @@ import { CATEGORIES, type DbEventCategory } from '@/lib/mock-data';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFavorites } from '@/hooks/useFavorites';
 
 const Index = () => {
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<DbEventCategory | 'all'>('all');
   const [selectedCity, setSelectedCity] = useState('all');
@@ -81,7 +83,7 @@ const Index = () => {
             ) : events.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {events.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={event} isFavorite={isFavorite(event.id)} onToggleFavorite={toggleFavorite} />
                 ))}
               </div>
             ) : (

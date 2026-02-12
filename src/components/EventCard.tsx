@@ -21,9 +21,11 @@ const categoryColorMap: Record<string, string> = {
 
 interface EventCardProps {
   event: Tables<'events'>;
+  isFavorite?: boolean;
+  onToggleFavorite?: (eventId: string) => void;
 }
 
-const EventCard = ({ event }: EventCardProps) => {
+const EventCard = ({ event, isFavorite = false, onToggleFavorite }: EventCardProps) => {
   const cat = CATEGORIES.find((c) => c.value === event.category);
   const formattedDate = new Date(event.date_start).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -54,13 +56,18 @@ const EventCard = ({ event }: EventCardProps) => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 hover:text-accent"
+            className={`absolute top-2 right-2 h-8 w-8 rounded-full backdrop-blur-sm transition-colors ${
+              isFavorite
+                ? 'bg-destructive/80 text-white hover:bg-destructive'
+                : 'bg-white/20 text-white hover:bg-white/40 hover:text-accent'
+            }`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              onToggleFavorite?.(event.id);
             }}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
           {!event.is_free && event.price && (
             <Badge className="absolute bottom-3 right-3 bg-primary/90 backdrop-blur-sm">

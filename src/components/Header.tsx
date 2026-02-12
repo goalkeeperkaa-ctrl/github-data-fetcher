@@ -52,9 +52,11 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
-              <Button variant="ghost" size="icon" className="relative">
-                <Heart className="h-4 w-4" />
-              </Button>
+              <Link to="/favorites">
+                <Button variant="ghost" size="icon" className="relative">
+                  <Heart className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
               </Button>

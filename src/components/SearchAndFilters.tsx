@@ -35,6 +35,8 @@ interface SearchAndFiltersProps {
   onDateChange: (d: Date | undefined) => void;
   selectedPrice: 'all' | 'free' | 'paid';
   onPriceChange: (p: 'all' | 'free' | 'paid') => void;
+  priceRange: [number, number];
+  onPriceRangeChange: (r: [number, number]) => void;
 }
 
 const SearchAndFilters = ({
@@ -50,9 +52,11 @@ const SearchAndFilters = ({
   onDateChange,
   selectedPrice,
   onPriceChange,
+  priceRange,
+  onPriceRangeChange,
 }: SearchAndFiltersProps) => {
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate || selectedPrice !== 'all';
+  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate || selectedPrice !== 'all' || priceRange[0] > 0 || priceRange[1] < 100000;
 
   const activeCategoryLabel =
     selectedCategory === 'all'
@@ -183,19 +187,67 @@ const SearchAndFilters = ({
         </Popover>
 
         {/* Price filter */}
-        <Select value={selectedPrice} onValueChange={(v) => onPriceChange(v as 'all' | 'free' | 'paid')}>
-          <SelectTrigger className={cn(
-            'w-[140px] h-8 text-sm',
-            selectedPrice !== 'all' && 'border-primary text-primary'
-          )}>
-            <SelectValue placeholder="Цена" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Любая цена</SelectItem>
-            <SelectItem value="free">Бесплатные</SelectItem>
-            <SelectItem value="paid">Платные</SelectItem>
-          </SelectContent>
-        </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-8 text-sm gap-1.5',
+                selectedPrice !== 'all' && 'border-primary text-primary'
+              )}
+            >
+              {selectedPrice === 'all'
+                ? 'Цена'
+                : selectedPrice === 'free'
+                  ? 'Бесплатные'
+                  : `${priceRange[0]}–${priceRange[1]} ₸`}
+              <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-4" align="start">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                {(['all', 'free', 'paid'] as const).map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => onPriceChange(val)}
+                    className={cn(
+                      'rounded-md px-3 py-2 text-sm text-left transition-colors hover:bg-accent',
+                      selectedPrice === val && 'bg-accent font-medium'
+                    )}
+                  >
+                    {val === 'all' ? 'Любая цена' : val === 'free' ? 'Бесплатные' : 'Платные'}
+                  </button>
+                ))}
+              </div>
+              {selectedPrice === 'paid' && (
+                <div className="space-y-3 border-t pt-3">
+                  <p className="text-xs text-muted-foreground">Диапазон цен (₸)</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      value={priceRange[0]}
+                      onChange={(e) => onPriceRangeChange([Number(e.target.value), priceRange[1]])}
+                      className="h-8 text-sm"
+                      placeholder="От"
+                    />
+                    <span className="text-muted-foreground text-xs">—</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={priceRange[1]}
+                      onChange={(e) => onPriceRangeChange([priceRange[0], Number(e.target.value)])}
+                      className="h-8 text-sm"
+                      placeholder="До"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {hasFilters && (
           <Button
@@ -207,6 +259,7 @@ const SearchAndFilters = ({
               onCityChange('all');
               onDateChange(undefined);
               onPriceChange('all');
+              onPriceRangeChange([0, 100000]);
             }}
           >
             <X className="h-3 w-3" />

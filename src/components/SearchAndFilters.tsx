@@ -1,4 +1,5 @@
-import { Search, SlidersHorizontal, List, Map, X } from 'lucide-react';
+import { Search, SlidersHorizontal, List, X } from 'lucide-react';
+import BrandPin from '@/components/BrandPin';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +63,7 @@ const SearchAndFilters = ({
             className="h-9 w-9"
             onClick={() => onViewModeChange('map')}
           >
-            <Map className="h-4 w-4" />
+            <BrandPin className="h-4 w-auto" />
           </Button>
         </div>
       </div>

@@ -33,6 +33,8 @@ interface SearchAndFiltersProps {
   onViewModeChange: (m: 'list' | 'map') => void;
   selectedDate: Date | undefined;
   onDateChange: (d: Date | undefined) => void;
+  selectedPrice: 'all' | 'free' | 'paid';
+  onPriceChange: (p: 'all' | 'free' | 'paid') => void;
 }
 
 const SearchAndFilters = ({
@@ -46,9 +48,11 @@ const SearchAndFilters = ({
   onViewModeChange,
   selectedDate,
   onDateChange,
+  selectedPrice,
+  onPriceChange,
 }: SearchAndFiltersProps) => {
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate;
+  const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate || selectedPrice !== 'all';
 
   const activeCategoryLabel =
     selectedCategory === 'all'
@@ -178,6 +182,21 @@ const SearchAndFilters = ({
           </PopoverContent>
         </Popover>
 
+        {/* Price filter */}
+        <Select value={selectedPrice} onValueChange={(v) => onPriceChange(v as 'all' | 'free' | 'paid')}>
+          <SelectTrigger className={cn(
+            'w-[140px] h-8 text-sm',
+            selectedPrice !== 'all' && 'border-primary text-primary'
+          )}>
+            <SelectValue placeholder="Цена" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Любая цена</SelectItem>
+            <SelectItem value="free">Бесплатные</SelectItem>
+            <SelectItem value="paid">Платные</SelectItem>
+          </SelectContent>
+        </Select>
+
         {hasFilters && (
           <Button
             variant="ghost"
@@ -187,6 +206,7 @@ const SearchAndFilters = ({
               onCategoryChange('all');
               onCityChange('all');
               onDateChange(undefined);
+              onPriceChange('all');
             }}
           >
             <X className="h-3 w-3" />

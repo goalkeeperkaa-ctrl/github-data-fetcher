@@ -29,6 +29,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<DbEventCategory | 'all'>('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedPrice, setSelectedPrice] = useState<'all' | 'free' | 'paid'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [events, setEvents] = useState<Tables<'events'>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,11 @@ const Index = () => {
           .gte('date_start', dayStart.toISOString())
           .lte('date_start', dayEnd.toISOString());
       }
+      if (selectedPrice === 'free') {
+        query = query.eq('is_free', true);
+      } else if (selectedPrice === 'paid') {
+        query = query.eq('is_free', false);
+      }
 
       const { data, error } = await query;
       if (!error && data) {
@@ -69,7 +75,7 @@ const Index = () => {
     };
 
     fetchEvents();
-  }, [searchQuery, selectedCategory, selectedCity, selectedDate]);
+  }, [searchQuery, selectedCategory, selectedCity, selectedDate, selectedPrice]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -88,6 +94,8 @@ const Index = () => {
           onViewModeChange={setViewMode}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
+          selectedPrice={selectedPrice}
+          onPriceChange={setSelectedPrice}
         />
 
         {viewMode === 'list' ? (

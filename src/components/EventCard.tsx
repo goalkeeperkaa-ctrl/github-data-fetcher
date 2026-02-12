@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Heart } from 'lucide-react';
+import { Calendar, Heart } from 'lucide-react';
+import BrandPin from '@/components/BrandPin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ const EventCard = ({ event, isFavorite = false, onToggleFavorite }: EventCardPro
             </span>
             {event.city && (
               <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
+                <BrandPin className="h-3.5 w-auto" />
                 {event.city}
               </span>
             )}

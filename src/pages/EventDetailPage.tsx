@@ -10,13 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Calendar,
-  MapPin,
   ArrowLeft,
   Clock,
   Heart,
   Share2,
   ExternalLink,
 } from 'lucide-react';
+import BrandPin from '@/components/BrandPin';
 import { toast } from 'sonner';
 
 const EventDetailPage = () => {
@@ -216,7 +216,7 @@ const EventDetailPage = () => {
 
                 {(event.city || event.address) && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <BrandPin className="h-5 w-auto text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       {event.city && <p className="font-medium">{event.city}</p>}
                       {event.address && (

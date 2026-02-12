@@ -1,6 +1,6 @@
-import { Sparkles } from 'lucide-react';
 import BrandPatternTerracotta from '@/components/BrandPatternTerracotta';
 import BrandSwirl from '@/components/BrandSwirl';
+import BrandOrnament from '@/components/BrandOrnament';
 
 const HeroSection = () => {
   return (
@@ -17,7 +17,7 @@ const HeroSection = () => {
 
       <div className="relative z-10 max-w-2xl">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="h-5 w-5 text-accent" />
+          <BrandOrnament className="h-5 w-auto text-accent" />
           <span className="text-sm font-medium opacity-90">Агрегатор мероприятий</span>
         </div>
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3">

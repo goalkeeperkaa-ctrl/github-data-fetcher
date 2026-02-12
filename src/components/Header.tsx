@@ -1,4 +1,5 @@
-import { Search, MapPin, Plus, Heart, Bell, User, Menu, X, LogOut } from 'lucide-react';
+import { Search, Plus, Heart, Bell, User, Menu, X, LogOut } from 'lucide-react';
+import BrandPin from '@/components/BrandPin';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -33,7 +34,7 @@ const Header = () => {
           </Link>
           <Link to="/map">
             <Button variant="ghost" size="sm" className="gap-2">
-              <MapPin className="h-4 w-4" />
+              <BrandPin className="h-4 w-auto" />
               Карта
             </Button>
           </Link>
@@ -93,7 +94,7 @@ const Header = () => {
           </Link>
           <Link to="/map" onClick={() => setMobileMenuOpen(false)}>
             <Button variant="ghost" className="w-full justify-start gap-2">
-              <MapPin className="h-4 w-4" />
+              <BrandPin className="h-4 w-auto" />
               Карта
             </Button>
           </Link>

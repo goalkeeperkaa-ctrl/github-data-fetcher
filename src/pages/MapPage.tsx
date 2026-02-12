@@ -9,7 +9,8 @@ import Header from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar, ExternalLink } from 'lucide-react';
+import BrandPin from '@/components/BrandPin';
 import { CATEGORIES } from '@/lib/mock-data';
 
 // Fix default marker icon issue with webpack/vite
@@ -183,7 +184,7 @@ const MapPage = () => {
                           </div>
                           {(event.city || event.address) && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
+                              <BrandPin className="h-3 w-auto" />
                               {[event.city, event.address].filter(Boolean).join(', ')}
                             </div>
                           )}

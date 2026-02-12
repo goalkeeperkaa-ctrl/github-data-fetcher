@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import { Heart } from 'lucide-react';
+import BrandSwirl from '@/components/BrandSwirl';
+import BrandOrnament from '@/components/BrandOrnament';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -59,7 +61,7 @@ const FavoritesPage = () => {
 
         {!user && !authLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Heart className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <BrandSwirl className="w-20 h-auto text-muted-foreground/40 mb-4" />
             <p className="text-lg font-medium mb-1">Войдите, чтобы видеть избранное</p>
             <p className="text-sm text-muted-foreground mb-4">
               Сохраняйте интересные мероприятия и возвращайтесь к ним позже
@@ -91,7 +93,7 @@ const FavoritesPage = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Heart className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <BrandOrnament className="w-16 h-auto text-muted-foreground/40 mb-4" />
             <p className="text-lg font-medium mb-1">Пока ничего нет</p>
             <p className="text-sm text-muted-foreground mb-4">
               Нажмите на сердечко на карточке мероприятия, чтобы добавить его сюда

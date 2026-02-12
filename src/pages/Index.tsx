@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import SearchAndFilters from '@/components/SearchAndFilters';
 import EventCard from '@/components/EventCard';
@@ -8,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFavorites } from '@/hooks/useFavorites';
+import BrandPin from '@/components/BrandPin';
 
 const Index = () => {
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -48,9 +50,9 @@ const Index = () => {
   }, [searchQuery, selectedCategory, selectedCity]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="container py-6 space-y-6">
+      <main className="container py-6 space-y-6 flex-1">
         <HeroSection />
         <SearchAndFilters
           searchQuery={searchQuery}
@@ -88,6 +90,7 @@ const Index = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">
+                <BrandPin className="w-16 h-20 mb-4 opacity-30" />
                 <p className="text-lg font-medium mb-1">Ничего не найдено</p>
                 <p className="text-sm text-muted-foreground">Попробуйте изменить фильтры или поисковый запрос</p>
               </div>
@@ -99,6 +102,7 @@ const Index = () => {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 };

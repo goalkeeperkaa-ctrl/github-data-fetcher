@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
@@ -10,6 +11,16 @@ import type { Tables } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFavorites } from '@/hooks/useFavorites';
 import BrandPin from '@/components/BrandPin';
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, delay: i * 0.08, ease: [0.25, 0.1, 0.25, 1] as const },
+  }),
+};
 
 const Index = () => {
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -67,11 +78,16 @@ const Index = () => {
 
         {viewMode === 'list' ? (
           <>
-            <div className="flex items-center justify-between">
+            <motion.div
+              className="flex items-center justify-between"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <p className="text-sm text-muted-foreground">
                 Найдено: <span className="font-medium text-foreground">{events.length}</span> мероприятий
               </p>
-            </div>
+            </motion.div>
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {[1, 2, 3].map((i) => (
@@ -84,16 +100,35 @@ const Index = () => {
               </div>
             ) : events.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {events.map((event) => (
-                  <EventCard key={event.id} event={event} isFavorite={isFavorite(event.id)} onToggleFavorite={toggleFavorite} />
+                {events.map((event, i) => (
+                  <motion.div
+                    key={event.id}
+                    custom={i}
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <EventCard event={event} isFavorite={isFavorite(event.id)} onToggleFavorite={toggleFavorite} />
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <BrandPin className="w-16 h-20 mb-4 opacity-30" />
+              <motion.div
+                className="flex flex-col items-center justify-center py-20 text-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <motion.div
+                  initial={{ y: -10 }}
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <BrandPin className="w-16 h-20 mb-4 opacity-30" />
+                </motion.div>
                 <p className="text-lg font-medium mb-1">Ничего не найдено</p>
                 <p className="text-sm text-muted-foreground">Попробуйте изменить фильтры или поисковый запрос</p>
-              </div>
+              </motion.div>
             )}
           </>
         ) : (

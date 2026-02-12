@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden rounded-2xl bg-primary p-8 md:p-12 text-primary-foreground">
       <div className="absolute inset-0">
-        <BrandPattern color="hsl(var(--accent))" opacity={0.12} />
+        <BrandPattern className="absolute inset-0 opacity-10" />
       </div>
       <div className="relative z-10 max-w-2xl">
         <div className="flex items-center gap-2 mb-3">

@@ -7,15 +7,15 @@ import { Link } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
 
 const categoryColorMap: Record<string, string> = {
-  concert: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
-  sport: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-  conference: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
-  theater: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
-  exhibition: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
-  festival: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-  workshop: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  meetup: 'bg-teal-500/10 text-teal-600 border-teal-500/20',
-  party: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
+  concert: 'bg-accent/10 text-accent border-accent/20',
+  sport: 'bg-primary/10 text-primary border-primary/20',
+  conference: 'bg-brand-gold/10 text-brand-gold border-brand-gold/20',
+  theater: 'bg-accent/10 text-accent border-accent/20',
+  exhibition: 'bg-brand-gold/10 text-brand-gold border-brand-gold/20',
+  festival: 'bg-accent/10 text-accent border-accent/20',
+  workshop: 'bg-primary/10 text-primary border-primary/20',
+  meetup: 'bg-primary/10 text-primary border-primary/20',
+  party: 'bg-accent/10 text-accent border-accent/20',
   other: 'bg-muted text-muted-foreground',
 };
 
@@ -58,7 +58,7 @@ const EventCard = ({ event, isFavorite = false, onToggleFavorite }: EventCardPro
             size="icon"
             className={`absolute top-2 right-2 h-8 w-8 rounded-full backdrop-blur-sm transition-colors ${
               isFavorite
-                ? 'bg-destructive/80 text-white hover:bg-destructive'
+                ? 'bg-accent/90 text-accent-foreground hover:bg-accent'
                 : 'bg-white/20 text-white hover:bg-white/40 hover:text-accent'
             }`}
             onClick={(e) => {
@@ -75,7 +75,7 @@ const EventCard = ({ event, isFavorite = false, onToggleFavorite }: EventCardPro
             </Badge>
           )}
           {event.is_free && (
-            <Badge className="absolute bottom-3 right-3 bg-emerald-500/90 backdrop-blur-sm text-white">
+            <Badge className="absolute bottom-3 right-3 bg-primary/90 backdrop-blur-sm text-primary-foreground">
               Бесплатно
             </Badge>
           )}

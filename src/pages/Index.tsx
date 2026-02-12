@@ -28,6 +28,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<DbEventCategory | 'all'>('all');
   const [selectedCity, setSelectedCity] = useState('all');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [events, setEvents] = useState<Tables<'events'>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,15 @@ const Index = () => {
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
+      if (selectedDate) {
+        const dayStart = new Date(selectedDate);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(selectedDate);
+        dayEnd.setHours(23, 59, 59, 999);
+        query = query
+          .gte('date_start', dayStart.toISOString())
+          .lte('date_start', dayEnd.toISOString());
+      }
 
       const { data, error } = await query;
       if (!error && data) {
@@ -59,7 +69,7 @@ const Index = () => {
     };
 
     fetchEvents();
-  }, [searchQuery, selectedCategory, selectedCity]);
+  }, [searchQuery, selectedCategory, selectedCity, selectedDate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -76,6 +86,8 @@ const Index = () => {
           onCityChange={setSelectedCity}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
         />
 
         {viewMode === 'list' ? (

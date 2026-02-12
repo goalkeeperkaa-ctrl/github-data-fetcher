@@ -59,6 +59,11 @@ const Header = () => {
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
               </Button>
+              <Link to="/profile">
+                <Button variant="ghost" size="icon" className="relative">
+                  <User className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="ghost" size="sm" className="gap-2" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
                 Выйти
@@ -104,6 +109,12 @@ const Header = () => {
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Plus className="h-4 w-4" />
                   Создать
+                </Button>
+              </Link>
+              <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start gap-2">
+                  <User className="h-4 w-4" />
+                  Профиль
                 </Button>
               </Link>
               <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}>

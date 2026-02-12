@@ -30,6 +30,7 @@ const Index = () => {
   const [selectedCity, setSelectedCity] = useState('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedPrice, setSelectedPrice] = useState<'all' | 'free' | 'paid'>('all');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [events, setEvents] = useState<Tables<'events'>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,12 @@ const Index = () => {
         query = query.eq('is_free', true);
       } else if (selectedPrice === 'paid') {
         query = query.eq('is_free', false);
+        if (priceRange[0] > 0) {
+          query = query.gte('price', priceRange[0]);
+        }
+        if (priceRange[1] < 100000) {
+          query = query.lte('price', priceRange[1]);
+        }
       }
 
       const { data, error } = await query;
@@ -75,7 +82,7 @@ const Index = () => {
     };
 
     fetchEvents();
-  }, [searchQuery, selectedCategory, selectedCity, selectedDate, selectedPrice]);
+  }, [searchQuery, selectedCategory, selectedCity, selectedDate, selectedPrice, priceRange]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -96,6 +103,8 @@ const Index = () => {
           onDateChange={setSelectedDate}
           selectedPrice={selectedPrice}
           onPriceChange={setSelectedPrice}
+          priceRange={priceRange}
+          onPriceRangeChange={setPriceRange}
         />
 
         {viewMode === 'list' ? (

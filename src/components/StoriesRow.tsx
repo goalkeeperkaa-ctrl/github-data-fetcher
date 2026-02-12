@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useStories } from '@/hooks/useStories';
 import { useAuth } from '@/hooks/useAuth';
 import StoryViewer from '@/components/StoryViewer';
+import CreateStoryModal from '@/components/CreateStoryModal';
 import { toast } from 'sonner';
 
 const StoriesRow = () => {
@@ -12,6 +13,8 @@ const StoriesRow = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddStory = () => {
@@ -25,15 +28,23 @@ const StoriesRow = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
+    setModalOpen(true);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleCreateStory = async (caption: string) => {
+    if (!selectedFile) return;
     setUploading(true);
-    const { error } = await createStory(file);
+    const { error } = await createStory(selectedFile, caption);
     if (error) {
       toast.error(error);
     } else {
       toast.success('История добавлена!');
     }
     setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setModalOpen(false);
+    setSelectedFile(null);
   };
 
   const openViewer = (index: number) => {
@@ -111,6 +122,17 @@ const StoriesRow = () => {
         accept="image/*"
         className="hidden"
         onChange={handleFileChange}
+      />
+
+      <CreateStoryModal
+        open={modalOpen}
+        file={selectedFile}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedFile(null);
+        }}
+        onSubmit={handleCreateStory}
+        isLoading={uploading}
       />
 
       {viewerOpen && storyGroups.length > 0 && (

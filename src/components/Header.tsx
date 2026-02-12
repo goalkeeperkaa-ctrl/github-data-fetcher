@@ -1,4 +1,5 @@
-import { Search, Plus, Heart, Bell, User, Menu, X, LogOut } from 'lucide-react';
+import { Search, Plus, Heart, User, Menu, X, LogOut } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 import BrandPin from '@/components/BrandPin';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -56,9 +57,7 @@ const Header = () => {
                   <Heart className="h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <NotificationBell />
               <Link to="/profile">
                 <Button variant="ghost" size="icon" className="relative">
                   <User className="h-4 w-4" />

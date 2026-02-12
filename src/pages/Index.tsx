@@ -31,6 +31,7 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedPrice, setSelectedPrice] = useState<'all' | 'free' | 'paid'>('all');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [sortBy, setSortBy] = useState<'date' | 'price_asc' | 'price_desc' | 'popular'>('date');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [events, setEvents] = useState<Tables<'events'>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,8 +42,18 @@ const Index = () => {
       let query = supabase
         .from('events')
         .select('*')
-        .eq('status', 'approved')
-        .order('date_start', { ascending: true });
+        .eq('status', 'approved');
+
+      // Apply sorting
+      if (sortBy === 'price_asc') {
+        query = query.order('price', { ascending: true, nullsFirst: false });
+      } else if (sortBy === 'price_desc') {
+        query = query.order('price', { ascending: false, nullsFirst: false });
+      } else if (sortBy === 'popular') {
+        query = query.order('created_at', { ascending: false });
+      } else {
+        query = query.order('date_start', { ascending: true });
+      }
 
       if (selectedCategory !== 'all') {
         query = query.eq('category', selectedCategory);
@@ -82,7 +93,7 @@ const Index = () => {
     };
 
     fetchEvents();
-  }, [searchQuery, selectedCategory, selectedCity, selectedDate, selectedPrice, priceRange]);
+  }, [searchQuery, selectedCategory, selectedCity, selectedDate, selectedPrice, priceRange, sortBy]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -105,6 +116,8 @@ const Index = () => {
           onPriceChange={setSelectedPrice}
           priceRange={priceRange}
           onPriceRangeChange={setPriceRange}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
         />
 
         {viewMode === 'list' ? (

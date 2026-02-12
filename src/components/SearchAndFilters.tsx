@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, SlidersHorizontal, List, X, CalendarIcon, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, List, X, CalendarIcon, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import BrandPin from '@/components/BrandPin';
@@ -37,6 +37,8 @@ interface SearchAndFiltersProps {
   onPriceChange: (p: 'all' | 'free' | 'paid') => void;
   priceRange: [number, number];
   onPriceRangeChange: (r: [number, number]) => void;
+  sortBy: 'date' | 'price_asc' | 'price_desc' | 'popular';
+  onSortChange: (s: 'date' | 'price_asc' | 'price_desc' | 'popular') => void;
 }
 
 const SearchAndFilters = ({
@@ -54,6 +56,8 @@ const SearchAndFilters = ({
   onPriceChange,
   priceRange,
   onPriceRangeChange,
+  sortBy,
+  onSortChange,
 }: SearchAndFiltersProps) => {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const hasFilters = selectedCategory !== 'all' || selectedCity !== 'all' || !!selectedDate || selectedPrice !== 'all' || priceRange[0] > 0 || priceRange[1] < 100000;
@@ -248,6 +252,23 @@ const SearchAndFilters = ({
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Sort */}
+        <Select value={sortBy} onValueChange={(v) => onSortChange(v as typeof sortBy)}>
+          <SelectTrigger className={cn(
+            'w-[170px] h-8 text-sm',
+            sortBy !== 'date' && 'border-primary text-primary'
+          )}>
+            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date">По дате</SelectItem>
+            <SelectItem value="price_asc">Цена ↑</SelectItem>
+            <SelectItem value="price_desc">Цена ↓</SelectItem>
+            <SelectItem value="popular">По популярности</SelectItem>
+          </SelectContent>
+        </Select>
 
         {hasFilters && (
           <Button

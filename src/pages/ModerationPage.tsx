@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Check, X, Calendar, Eye, ShieldCheck, Search, CheckCheck, Loader2 } from 'lucide-react';
@@ -40,6 +41,8 @@ const ModerationPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<Tables<'events'> | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // Stats
   const stats = useMemo(() => ({
@@ -91,14 +94,17 @@ const ModerationPage = () => {
       });
   }, [allEvents, activeTab, searchQuery]);
 
-  const updateStatus = async (eventId: string, status: 'approved' | 'rejected') => {
+  const updateStatus = async (eventId: string, status: 'approved' | 'rejected', reason?: string) => {
     setActionLoading(eventId);
-    const { error } = await supabase.from('events').update({ status }).eq('id', eventId);
+    const { error } = await supabase
+      .from('events')
+      .update({ status, rejection_reason: status === 'rejected' ? (reason || null) : null })
+      .eq('id', eventId);
     if (error) {
       toast.error('Ошибка: ' + error.message);
     } else {
       toast.success(status === 'approved' ? 'Мероприятие одобрено!' : 'Мероприятие отклонено');
-      setAllEvents((prev) => prev.map((e) => e.id === eventId ? { ...e, status } : e));
+      setAllEvents((prev) => prev.map((e) => e.id === eventId ? { ...e, status, rejection_reason: status === 'rejected' ? (reason || null) : null } : e));
       setPreviewEvent(null);
       setSelectedIds((prev) => { const n = new Set(prev); n.delete(eventId); return n; });
     }
@@ -112,7 +118,7 @@ const ModerationPage = () => {
 
     const { error } = await supabase
       .from('events')
-      .update({ status })
+      .update({ status, rejection_reason: status === 'rejected' ? 'Отклонено модерацией' : null })
       .in('id', ids);
 
     if (error) {
@@ -330,7 +336,7 @@ const ModerationPage = () => {
                                 <Button size="sm" onClick={() => updateStatus(event.id, 'approved')} disabled={actionLoading === event.id}>
                                   <Check className="h-4 w-4 mr-1" /> Одобрить
                                 </Button>
-                                <Button variant="destructive" size="sm" onClick={() => updateStatus(event.id, 'rejected')} disabled={actionLoading === event.id}>
+                                <Button variant="destructive" size="sm" onClick={() => { setRejectTarget(event); setRejectReason(''); }} disabled={actionLoading === event.id}>
                                   <X className="h-4 w-4 mr-1" /> Отклонить
                                 </Button>
                               </>
@@ -341,7 +347,7 @@ const ModerationPage = () => {
                               </Button>
                             )}
                             {activeTab === 'approved' && (
-                              <Button variant="destructive" size="sm" onClick={() => updateStatus(event.id, 'rejected')} disabled={actionLoading === event.id}>
+                              <Button variant="destructive" size="sm" onClick={() => { setRejectTarget(event); setRejectReason(''); }} disabled={actionLoading === event.id}>
                                 <X className="h-4 w-4 mr-1" /> Отклонить
                               </Button>
                             )}
@@ -395,13 +401,45 @@ const ModerationPage = () => {
                     <Button onClick={() => updateStatus(previewEvent.id, 'approved')} disabled={actionLoading === previewEvent.id}>
                       <Check className="h-4 w-4 mr-1" /> Одобрить
                     </Button>
-                    <Button variant="destructive" className="flex-1" onClick={() => updateStatus(previewEvent.id, 'rejected')} disabled={actionLoading === previewEvent.id}>
+                    <Button variant="destructive" className="flex-1" onClick={() => { setRejectTarget(previewEvent); setRejectReason(''); }} disabled={actionLoading === previewEvent.id}>
                       <X className="h-4 w-4 mr-1" /> Отклонить
                     </Button>
                   </div>
                 )}
+                {previewEvent.rejection_reason && (
+                  <p className="text-sm text-muted-foreground">Причина: {previewEvent.rejection_reason}</p>
+                )}
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!rejectTarget} onOpenChange={() => setRejectTarget(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Причина отклонения</DialogTitle>
+              <DialogDescription>Опишите кратко, почему мероприятие отклонено.</DialogDescription>
+            </DialogHeader>
+            <Textarea
+              placeholder="Например: не хватает адреса или описание слишком краткое"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={4}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setRejectTarget(null)}>Отмена</Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (!rejectTarget) return;
+                  await updateStatus(rejectTarget.id, 'rejected', rejectReason);
+                  setRejectTarget(null);
+                }}
+                disabled={actionLoading === rejectTarget?.id}
+              >
+                Отклонить
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </main>

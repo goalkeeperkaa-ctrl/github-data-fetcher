@@ -99,6 +99,7 @@ const EventDetailPage = () => {
   }
 
   const cat = CATEGORIES.find((c) => c.value === event.category);
+  const isOwner = user?.id === event.user_id;
 
   const dateStart = new Date(event.date_start);
   const dateEnd = event.date_end ? new Date(event.date_end) : null;
@@ -166,6 +167,15 @@ const EventDetailPage = () => {
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
                   {event.description}
                 </p>
+              </section>
+            )}
+
+            {isOwner && event.status === 'rejected' && event.rejection_reason && (
+              <section>
+                <h2 className="text-lg font-semibold mb-3">Причина отклонения</h2>
+                <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                  {event.rejection_reason}
+                </div>
               </section>
             )}
 

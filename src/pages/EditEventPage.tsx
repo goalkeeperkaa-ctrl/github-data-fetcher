@@ -177,6 +177,7 @@ const EditEventPage = () => {
           price: isFree ? null : (price ? parseFloat(price) : null),
           image_url: imageUrl,
           status: 'pending',
+          rejection_reason: null,
         })
         .eq('id', event.id);
 

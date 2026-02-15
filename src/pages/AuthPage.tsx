@@ -93,7 +93,7 @@ const AuthPage = () => {
                       ))}
                     </InputOTPGroup>
                   </InputOTP>
-                  <p className="text-xs text-muted-foreground">Код действует ограниченное время. Если не пришёл — проверьте спам.</p>
+                  <p className="text-xs text-muted-foreground">Код действует 10 минут. Если не пришёл — проверьте спам.</p>
                 </div>
               )}
 

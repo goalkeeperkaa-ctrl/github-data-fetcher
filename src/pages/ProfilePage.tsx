@@ -14,9 +14,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Camera, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, Navigate } from 'react-router-dom';
+import { INTERESTS } from '@/lib/mock-data';
 import BrandPatternGold from '@/components/BrandPatternGold';
 import BrandOrnament from '@/components/BrandOrnament';
 
@@ -27,12 +29,15 @@ const ProfilePage = () => {
   const [myEvents, setMyEvents] = useState<Tables<'events'>[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [favoriteEvents, setFavoriteEvents] = useState<Tables<'events'>[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Edit form state
   const [displayName, setDisplayName] = useState('');
   const [city, setCity] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -48,6 +53,7 @@ const ProfilePage = () => {
         setProfile(data);
         setDisplayName(data.display_name || '');
         setCity(data.city || '');
+        setInterests((data.interests as string[]) || []);
       }
       setLoadingProfile(false);
     };
@@ -63,8 +69,24 @@ const ProfilePage = () => {
       setLoadingEvents(false);
     };
 
+    const fetchFavorites = async () => {
+      const { data } = await supabase
+        .from('favorites')
+        .select('event:events(*)')
+        .eq('user_id', user.id);
+
+      if (data) {
+        const events = data
+          .map((row: { event: Tables<'events'> | null }) => row.event)
+          .filter(Boolean) as Tables<'events'>[];
+        setFavoriteEvents(events);
+      }
+      setLoadingFavorites(false);
+    };
+
     fetchProfile();
     fetchMyEvents();
+    fetchFavorites();
   }, [user]);
 
   const handleSaveProfile = async () => {
@@ -73,13 +95,13 @@ const ProfilePage = () => {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ display_name: displayName, city })
+      .update({ display_name: displayName, city, interests })
       .eq('user_id', user.id);
 
     if (error) {
       toast.error('Не удалось сохранить профиль');
     } else {
-      setProfile({ ...profile, display_name: displayName, city });
+      setProfile({ ...profile, display_name: displayName, city, interests });
       toast.success('Профиль обновлён');
     }
     setSaving(false);
@@ -220,6 +242,7 @@ const ProfilePage = () => {
           <Tabs defaultValue="events" className="space-y-6">
             <TabsList>
               <TabsTrigger value="events">Мои мероприятия ({myEvents.length})</TabsTrigger>
+              <TabsTrigger value="favorites">Избранное ({favoriteEvents.length})</TabsTrigger>
               <TabsTrigger value="settings">Настройки</TabsTrigger>
             </TabsList>
 
@@ -279,6 +302,38 @@ const ProfilePage = () => {
               )}
             </TabsContent>
 
+            <TabsContent value="favorites">
+              {loadingFavorites ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="aspect-[16/10] rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  ))}
+                </div>
+              ) : favoriteEvents.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {favoriteEvents.map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      isFavorite={isFavorite(event.id)}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <BrandOrnament className="w-12 h-auto mx-auto mb-4 opacity-30" />
+                  <p className="text-muted-foreground mb-3">В избранном пока пусто</p>
+                  <Link to="/">
+                    <Button variant="outline">Перейти к афише</Button>
+                  </Link>
+                </div>
+              )}
+            </TabsContent>
+
             <TabsContent value="settings">
               <motion.div
                 initial={{ opacity: 0 }}
@@ -307,6 +362,26 @@ const ProfilePage = () => {
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="Ваш город"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Интересы</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {INTERESTS.map((interest) => (
+                          <label key={interest} className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                              checked={interests.includes(interest)}
+                              onCheckedChange={(checked) => {
+                                setInterests((prev) => {
+                                  if (checked) return [...prev, interest];
+                                  return prev.filter((i) => i !== interest);
+                                });
+                              }}
+                            />
+                            {interest}
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Выберите интересы, чтобы мы лучше подбирали события.</p>
                     </div>
                     <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

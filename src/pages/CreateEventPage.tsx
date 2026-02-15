@@ -60,6 +60,35 @@ const CreateEventPage = () => {
       return;
     }
 
+    if (!description.trim()) {
+      toast.error('Добавьте описание');
+      return;
+    }
+    if (!dateEnd) {
+      toast.error('Укажите дату окончания');
+      return;
+    }
+    if (dateStart && dateEnd && new Date(dateEnd) < new Date(dateStart)) {
+      toast.error('Дата окончания не может быть раньше даты начала');
+      return;
+    }
+    if (!city.trim()) {
+      toast.error('Укажите город');
+      return;
+    }
+    if (!address.trim()) {
+      toast.error('Укажите адрес');
+      return;
+    }
+    if (!isFree && !price) {
+      toast.error('Укажите цену');
+      return;
+    }
+    if (!imageFile) {
+      toast.error('Добавьте обложку');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -165,6 +194,7 @@ const CreateEventPage = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
+                  required
                 />
               </div>
 
@@ -211,6 +241,7 @@ const CreateEventPage = () => {
                       value={dateEnd}
                       onChange={(e) => setDateEnd(e.target.value)}
                       className="pl-10"
+                      required
                     />
                   </div>
                 </div>
@@ -225,6 +256,7 @@ const CreateEventPage = () => {
                     placeholder="Город"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -237,6 +269,7 @@ const CreateEventPage = () => {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       className="pl-10"
+                      required
                     />
                   </div>
                 </div>
@@ -321,6 +354,7 @@ const CreateEventPage = () => {
                         accept="image/*"
                         onChange={handleImageChange}
                         className="hidden"
+                        required
                       />
                     </label>
                   )}

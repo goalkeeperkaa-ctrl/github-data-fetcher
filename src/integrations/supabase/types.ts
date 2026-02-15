@@ -170,6 +170,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          interests: string[]
           updated_at: string
           user_id: string
         }
@@ -179,6 +180,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          interests?: string[]
           updated_at?: string
           user_id: string
         }
@@ -188,10 +190,45 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          interests?: string[]
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_event_id_fkey"
+            columns: ["event_id"]
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       stories: {
         Row: {

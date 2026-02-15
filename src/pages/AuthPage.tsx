@@ -7,30 +7,47 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { toast } from 'sonner';
 import { Mail, Lock, User } from 'lucide-react';
 import AidagisLogo from '@/components/AidagisLogo';
 import BrandPatternGold from '@/components/BrandPatternGold';
 
 const AuthPage = () => {
-  const { signIn, signUp } = useAuth();
+  const { signUp, sendOtp, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
 
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regName, setRegName] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!loginEmail) return;
     setLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await sendOtp(loginEmail);
     setLoading(false);
     if (error) {
-      toast.error('Ошибка входа: ' + error.message);
+      toast.error('Ошибка отправки кода: ' + error.message);
+    } else {
+      toast.success('Код отправлен на email');
+      setOtpSent(true);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail || otpCode.length < 6) return;
+    setLoading(true);
+    const { error } = await verifyOtp(loginEmail, otpCode);
+    setLoading(false);
+    if (error) {
+      toast.error('Ошибка подтверждения кода: ' + error.message);
     } else {
       toast.success('Вы вошли в аккаунт!');
       navigate('/');
@@ -79,7 +96,7 @@ const AuthPage = () => {
               </TabsList>
 
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4 mt-4">
+                <form onSubmit={otpSent ? handleVerifyCode : handleSendCode} className="space-y-4 mt-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <div className="relative">
@@ -87,16 +104,42 @@ const AuthPage = () => {
                       <Input id="login-email" type="email" placeholder="your@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Пароль</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="login-password" type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10" required />
+
+                  {otpSent && (
+                    <div className="space-y-2">
+                      <Label>Код из письма</Label>
+                      <InputOTP value={otpCode} onChange={setOtpCode} maxLength={6}>
+                        <InputOTPGroup>
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <InputOTPSlot key={i} index={i} />
+                          ))}
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <InputOTPSlot key={i + 3} index={i + 3} />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
                     </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {otpSent ? (loading ? 'Проверяем...' : 'Подтвердить код') : (loading ? 'Отправляем...' : 'Получить код')}
+                    </Button>
+                    {otpSent && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full"
+                        onClick={handleSendCode}
+                        disabled={loading}
+                      >
+                        Отправить код ещё раз
+                      </Button>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Входим...' : 'Войти'}
-                  </Button>
                 </form>
               </TabsContent>
 

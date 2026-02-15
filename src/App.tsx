@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import CreateEventPage from "./pages/CreateEventPage";
+import EditEventPage from "./pages/EditEventPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import ModerationPage from "./pages/ModerationPage";
 import MapPage from "./pages/MapPage";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/event/:id" element={<EventDetailPage />} />
+            <Route path="/event/:id/edit" element={<EditEventPage />} />
             <Route path="/create" element={<CreateEventPage />} />
             <Route path="/moderation" element={<ModerationPage />} />
             <Route path="/map" element={<MapPage />} />

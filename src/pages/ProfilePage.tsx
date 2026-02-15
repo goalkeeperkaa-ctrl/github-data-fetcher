@@ -282,9 +282,14 @@ const ProfilePage = () => {
                                 {new Date(event.date_start).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
                             </div>
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${status.color}`}>
-                              {status.label}
-                            </span>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${status.color}`}>
+                                {status.label}
+                              </span>
+                              <Button size="sm" variant="outline" asChild>
+                                <Link to={`/event/${event.id}/edit`}>Редактировать</Link>
+                              </Button>
+                            </div>
                           </CardContent>
                         </Card>
                       </motion.div>

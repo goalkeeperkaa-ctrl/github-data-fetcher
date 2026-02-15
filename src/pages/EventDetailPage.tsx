@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { useFavorites } from '@/hooks/useFavorites';
 import {
   Calendar,
   ArrowLeft,
@@ -15,12 +17,15 @@ import {
   Heart,
   Share2,
   ExternalLink,
+  Pencil,
 } from 'lucide-react';
 import BrandPin from '@/components/BrandPin';
 import { toast } from 'sonner';
 
 const EventDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [event, setEvent] = useState<Tables<'events'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -242,19 +247,28 @@ const EventDetailPage = () => {
             {/* Actions */}
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant={event ? (isFavorite(event.id) ? 'default' : 'outline') : 'outline'}
                 className="flex-1"
                 onClick={(e) => {
                   e.preventDefault();
+                  if (event) toggleFavorite(event.id);
                 }}
               >
                 <Heart className="h-4 w-4 mr-1.5" />
-                В избранное
+                {event && isFavorite(event.id) ? 'В избранном' : 'В избранное'}
               </Button>
               <Button variant="outline" size="icon" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
               </Button>
             </div>
+            {user && event.user_id === user.id && (
+              <Button asChild variant="outline" className="w-full">
+                <Link to={`/event/${event.id}/edit`}>
+                  <Pencil className="h-4 w-4 mr-1.5" />
+                  Редактировать
+                </Link>
+              </Button>
+            )}
           </aside>
         </div>
       </main>

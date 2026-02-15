@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { CATEGORIES } from '@/lib/mock-data';
+import { CATEGORIES, CITIES } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Check, X, Calendar, Eye, ShieldCheck, Search, CheckCheck, Loader2 } from 'lucide-react';
 import BrandPin from '@/components/BrandPin';
@@ -39,6 +40,8 @@ const ModerationPage = () => {
   const [previewEvent, setPreviewEvent] = useState<Tables<'events'> | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCity, setSelectedCity] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<Tables<'events'> | null>(null);
@@ -83,6 +86,8 @@ const ModerationPage = () => {
   const filteredEvents = useMemo(() => {
     return allEvents
       .filter((e) => e.status === activeTab)
+      .filter((e) => (selectedCategory === 'all' ? true : e.category === selectedCategory))
+      .filter((e) => (selectedCity === 'all' ? true : e.city === selectedCity))
       .filter((e) => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
@@ -92,7 +97,7 @@ const ModerationPage = () => {
           (e.description?.toLowerCase().includes(q))
         );
       });
-  }, [allEvents, activeTab, searchQuery]);
+  }, [allEvents, activeTab, searchQuery, selectedCategory, selectedCity]);
 
   const updateStatus = async (eventId: string, status: 'approved' | 'rejected', reason?: string) => {
     setActionLoading(eventId);
@@ -210,15 +215,43 @@ const ModerationPage = () => {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Поиск по названию, городу..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search & filters */}
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию, городу..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full md:w-56">
+              <SelectValue placeholder="Категория" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все категории</SelectItem>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.emoji} {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Город" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все города</SelectItem>
+              {CITIES.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as EventStatus); setSelectedIds(new Set()); }}>
@@ -311,6 +344,9 @@ const ModerationPage = () => {
                             </div>
                             {event.description && (
                               <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                            )}
+                            {event.rejection_reason && activeTab === 'rejected' && (
+                              <p className="text-xs text-accent">Причина: {event.rejection_reason}</p>
                             )}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">

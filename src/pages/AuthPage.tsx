@@ -6,25 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { toast } from 'sonner';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import AidagisLogo from '@/components/AidagisLogo';
 import BrandPatternGold from '@/components/BrandPatternGold';
 
 const AuthPage = () => {
-  const { signUp, sendOtp, verifyOtp } = useAuth();
+  const { sendOtp, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regName, setRegName] = useState('');
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,23 +49,6 @@ const AuthPage = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (regPassword.length < 6) {
-      toast.error('Пароль должен быть не менее 6 символов');
-      return;
-    }
-    setLoading(true);
-    const { error } = await signUp(regEmail, regPassword, regName);
-    setLoading(false);
-    if (error) {
-      toast.error('Ошибка регистрации: ' + error.message);
-    } else {
-      toast.success('Аккаунт создан! Вы вошли в систему.');
-      navigate('/');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -89,89 +67,53 @@ const AuthPage = () => {
             <CardDescription>Войдите или создайте аккаунт для доступа ко всем функциям</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Вход</TabsTrigger>
-                <TabsTrigger value="register">Регистрация</TabsTrigger>
-              </TabsList>
+            <form onSubmit={otpSent ? handleVerifyCode : handleSendCode} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="login-email" type="email" placeholder="your@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
+                </div>
+                <p className="text-xs text-muted-foreground">Мы отправим одноразовый код на вашу почту.</p>
+              </div>
 
-              <TabsContent value="login">
-                <form onSubmit={otpSent ? handleVerifyCode : handleSendCode} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="login-email" type="email" placeholder="your@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
-                    </div>
-                  </div>
+              {otpSent && (
+                <div className="space-y-2">
+                  <Label>Код из письма</Label>
+                  <InputOTP value={otpCode} onChange={setOtpCode} maxLength={6}>
+                    <InputOTPGroup>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <InputOTPSlot key={i} index={i} />
+                      ))}
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <InputOTPSlot key={i + 3} index={i + 3} />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                  <p className="text-xs text-muted-foreground">Код действует ограниченное время. Если не пришёл — проверьте спам.</p>
+                </div>
+              )}
 
-                  {otpSent && (
-                    <div className="space-y-2">
-                      <Label>Код из письма</Label>
-                      <InputOTP value={otpCode} onChange={setOtpCode} maxLength={6}>
-                        <InputOTPGroup>
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <InputOTPSlot key={i} index={i} />
-                          ))}
-                        </InputOTPGroup>
-                        <InputOTPSeparator />
-                        <InputOTPGroup>
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <InputOTPSlot key={i + 3} index={i + 3} />
-                          ))}
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {otpSent ? (loading ? 'Проверяем...' : 'Подтвердить код') : (loading ? 'Отправляем...' : 'Получить код')}
-                    </Button>
-                    {otpSent && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full"
-                        onClick={handleSendCode}
-                        disabled={loading}
-                      >
-                        Отправить код ещё раз
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-name">Имя</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="reg-name" type="text" placeholder="Ваше имя" value={regName} onChange={(e) => setRegName(e.target.value)} className="pl-10" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="reg-email" type="email" placeholder="your@email.com" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="pl-10" required />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-password">Пароль</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="reg-password" type="password" placeholder="Минимум 6 символов" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="pl-10" required minLength={6} />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Регистрация...' : 'Создать аккаунт'}
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {otpSent ? (loading ? 'Проверяем...' : 'Подтвердить код') : (loading ? 'Отправляем...' : 'Получить код')}
+                </Button>
+                {otpSent && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={handleSendCode}
+                    disabled={loading}
+                  >
+                    Отправить код ещё раз
                   </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                )}
+              </div>
+            </form>
           </CardContent>
         </Card>
       </main>
